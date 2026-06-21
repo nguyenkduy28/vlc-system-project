@@ -1,0 +1,56 @@
+CSV text has been written to file : Library.csv
+
+Library Component Count : 49
+
+Name                Description
+----------------------------------------------------------------------------------------------------
+
+AMS1117             
+BAT54C              
+BUTTON_SMD          
+CAPACITOR           
+CAPACITOR ALU       
+CAPACITOR TATA      
+CH340G              
+CON-2               
+CON-3               
+CON-4               
+CON-6               
+CON-8               
+DIODE               
+DIODE_ZE            
+Dual_BAT            
+ESP32-WROOM-32E     
+FB                  
+HOLDER BAT          
+ICL7662CBA          
+INA128UA            
+INDUCTOR            
+JACK 2.1            
+JACK_3.5            
+LED_BLUE            
+LED_RED             
+LM393DT             
+OPA188AID           
+OPA2134UA           
+PJ-327A-5P          
+P_MOS               
+RESISTOR            
+RESISTOR TH         
+RT9013              
+SB                  
+SLIDE-SW            
+SMAJ12              
+SMAJ5.0             
+SS34                
+STM32F103C8T6       
+STM32F407VET6       
+TPS5430DDA          
+TPS54331DR          
+Test_point          
+USB_C               
+VRES                
+XTAL 8MHZ           
+XTAL_12MHZ          
+XTAL_2              
+XTAL_4              

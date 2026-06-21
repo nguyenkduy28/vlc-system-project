@@ -1,0 +1,32 @@
+# STM32CubeIDE build output
+firmware/Debug/
+*.o
+*.d
+*.su
+*.cyclo
+*.elf
+*.map
+*.list
+
+# IDE and operating-system files
+.metadata/
+.settings/
+.project
+.cproject
+.DS_Store
+Thumbs.db
+__pycache__/
+*.py[cod]
+~$*
+
+# Altium backups and generated reports
+**/History/
+**/__Previews/
+hardware/PCB_STM32F4/Project Outputs for PCB_STM32F4/
+*.PrjPcbStructure
+
+# Duplicate archive of firmware headers
+firmware/Core/Inc.zip
+
+# Installers are not project source or reference material
+*.exe

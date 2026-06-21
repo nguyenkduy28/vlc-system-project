@@ -1,0 +1,363 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>TX Flow - OWC Project</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #111318;
+      --panel: #171b22;
+      --panel-2: #1d232d;
+      --text: #e8edf5;
+      --muted: #a6b0bf;
+      --accent: #7fb2ff;
+      --border: #2a313d;
+      --code: #0f1319;
+      --good: #76d39b;
+    }
+    html, body {
+      margin: 0;
+      padding: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: "Segoe UI", Arial, sans-serif;
+      line-height: 1.55;
+    }
+    body {
+      padding: 32px 20px 56px;
+    }
+    .page {
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+    h1, h2, h3 {
+      line-height: 1.2;
+      margin: 0 0 12px;
+    }
+    h1 {
+      font-size: 2rem;
+      letter-spacing: 0;
+    }
+    h2 {
+      margin-top: 28px;
+      font-size: 1.25rem;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 8px;
+    }
+    h3 {
+      margin-top: 20px;
+      font-size: 1rem;
+    }
+    p, li {
+      color: var(--text);
+    }
+    .muted {
+      color: var(--muted);
+    }
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 18px 18px 14px;
+      margin: 16px 0;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 12px 0 18px;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      overflow: hidden;
+    }
+    th, td {
+      border-bottom: 1px solid var(--border);
+      padding: 10px 12px;
+      text-align: left;
+      vertical-align: top;
+    }
+    th {
+      background: var(--panel-2);
+      color: var(--text);
+      font-weight: 600;
+    }
+    tr:last-child td {
+      border-bottom: 0;
+    }
+    code, kbd {
+      background: rgba(127, 178, 255, 0.12);
+      color: #d8e7ff;
+      padding: 0 5px;
+      border-radius: 5px;
+      font-size: 0.95em;
+    }
+    pre {
+      background: var(--code);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 14px;
+      overflow: auto;
+      white-space: pre;
+      margin: 12px 0 18px;
+      color: #dfe7f4;
+    }
+    .topnote {
+      margin-bottom: 18px;
+      color: var(--muted);
+    }
+    .section-list {
+      padding-left: 20px;
+    }
+    .good {
+      color: var(--good);
+      font-weight: 600;
+    }
+    .grid-2 {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 16px;
+    }
+    @media (max-width: 800px) {
+      .grid-2 {
+        grid-template-columns: 1fr;
+      }
+      body {
+        padding: 18px 12px 40px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <h1>TX Flow - OWC Project</h1>
+    <p class="topnote">Tai lieu nay mo ta luong chay TX cua firmware OWC tren STM32F407, tap trung vao che do <code>APP_BOARD_ROLE_TX_ONLY</code> va cach cac lenh UART dieu khien TX runtime.</p>
+
+    <h2>1. Tong quan</h2>
+    <div class="card">
+      <p>Luong TX trong firmware duoc chia thanh 2 phan:</p>
+      <ol class="section-list">
+        <li>Khoi tao va bat phan cung phat.</li>
+        <li>Chay theo nhip <code>TIM2</code> de phat tung bit OOK ra <code>TIM1</code>.</li>
+      </ol>
+      <p>Firmware giu nguyen cac rang buoc quan trong:</p>
+      <ul class="section-list">
+        <li><code>TIM1</code> tao carrier <code>1 MHz</code> tren <code>PA8</code>.</li>
+        <li><code>TIM2</code> tao bit tick <code>100 kHz</code>.</li>
+        <li>OOK:
+          <ul>
+            <li>bit <code>1</code> -&gt; <code>TIM1 CCR1 = 84</code></li>
+            <li>bit <code>0</code> -&gt; <code>TIM1 CCR1 = 0</code></li>
+          </ul>
+        </li>
+        <li>Frame format: <code>AA AA AA | D5 | LEN | PAYLOAD | CHECKSUM</code></li>
+        <li>Payload mac dinh: <code>55 A5 3C C3</code></li>
+      </ul>
+    </div>
+
+    <h2>2. Khoi chinh cua TX</h2>
+    <table>
+      <thead>
+        <tr><th>Khoi</th><th>Vai tro</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><code>main.c</code></td><td>Goi init he thong va vong lap chinh</td></tr>
+        <tr><td><code>app_tasks.c</code></td><td>Dieu phoi start/process/ISR theo board role</td></tr>
+        <tr><td><code>vlc_tx.c</code></td><td>Gi frame TX va phat tung bit OOK</td></tr>
+        <tr><td><code>app_protocol.c</code></td><td>Tao frame chuan va checksum</td></tr>
+        <tr><td><code>bsp_uart.c</code></td><td>Nhan lenh UART va in log</td></tr>
+      </tbody>
+    </table>
+
+    <h2>3. Flow khoi dong TX</h2>
+    <pre>main()
+  -&gt; HAL_Init()
+  -&gt; SystemClock_Config()
+  -&gt; MX_GPIO_Init()
+  -&gt; MX_DMA_Init()
+  -&gt; MX_TIM1_Init()
+  -&gt; MX_TIM2_Init()
+  -&gt; MX_ADC1_Init()
+  -&gt; MX_USART2_UART_Init()
+  -&gt; MX_DAC_Init()
+  -&gt; MX_TIM4_Init()
+  -&gt; app_tasks_init()
+  -&gt; app_tasks_start()
+       -&gt; set DAC threshold
+       -&gt; start ADC monitor
+       -&gt; start TX theo APP_BOARD_ROLE
+       -&gt; start TIM2 interrupt
+  -&gt; while(1)
+       -&gt; app_tasks_process()</pre>
+
+    <h2>4. Flow phat bit TX</h2>
+    <p>Moi lan <code>TIM2</code> ngat, firmware goi <code>app_tasks_on_timer_period_elapsed()</code>. O che do TX_ONLY, ISR chi goi <code>vlc_tx_on_bit_tick()</code>.</p>
+    <pre>TIM2 IRQ
+  -&gt; app_tasks_on_timer_period_elapsed()
+      -&gt; s_tick_count++
+      -&gt; vlc_tx_on_bit_tick()
+          -&gt; neu carrier_test_mode = 1
+               CCR1 = 84
+               return
+          -&gt; neu tx_enabled = 0 va single_frame_mode = 0
+               CCR1 = 0
+               return
+          -&gt; doc bit tiep theo MSB-first tu frame
+          -&gt; bit = 1 ? CCR1 = 84 : CCR1 = 0
+          -&gt; tang bit_index
+          -&gt; neu het frame
+               reset bit_index
+               tang frame counter
+               neu single_frame_mode = 1
+                   tx_enabled = 0
+                   CCR1 = 0</pre>
+
+    <h2>5. Cau truc frame TX</h2>
+    <pre>+---------+---------+---------+---------+---------+----------------+-----------+
+| Preamble| Preamble| Preamble|  Sync   |  LEN    |   PAYLOAD      | CHECKSUM  |
+| 0xAA    | 0xAA    | 0xAA    | 0xD5    | 1 byte  | 1..N bytes     | 1 byte    |
++---------+---------+---------+---------+---------+----------------+-----------+</pre>
+    <p>Checksum duoc tinh theo cong thuc:</p>
+    <pre>CHECKSUM = (LEN + sum(PAYLOAD)) mod 256</pre>
+    <p>Vi du payload mac dinh:</p>
+    <pre>LEN = 04
+PAYLOAD = 55 A5 3C C3
+CHECKSUM = FD</pre>
+
+    <h2>6. Flow build frame TX</h2>
+    <p>Khi khoi tao, TX lay payload chuan tu <code>app_protocol_get_expected_payload()</code> va build frame bang <code>app_protocol_build_frame()</code>.</p>
+    <pre>app_tasks_init()
+  -&gt; vlc_tx_init(htim1)
+      -&gt; app_protocol_get_expected_payload()
+      -&gt; app_protocol_build_frame()
+      -&gt; luu frame serialize vao buffer TX</pre>
+
+    <h2>7. Luong UART dieu khien TX</h2>
+    <p>UART command duoc xu ly o foreground trong <code>app_tasks_process()</code>, khong xu ly trong ISR.</p>
+    <pre>UART RX byte
+  -&gt; app_handle_uart_rx()
+      -&gt; gom byte thanh 1 dong lenh
+      -&gt; app_handle_command_line()
+          -&gt; neu la rtc command
+               xu ly RTC
+          -&gt; neu APP_BOARD_ROLE_TX_ONLY
+               xu ly TX command
+          -&gt; nguoc lai
+               bao lenh khong ho tro</pre>
+
+    <h3>7.1 <code>tx_payload</code></h3>
+    <p>Lenh:</p>
+    <pre>tx_payload 11 22 33 44 55 66 77 88</pre>
+    <p>Luong xu ly:</p>
+    <ol class="section-list">
+      <li>Tach tung token hex sau <code>tx_payload</code>.</li>
+      <li>Parse tung byte bang <code>strtoul(..., 16)</code>.</li>
+      <li>Kiem tra gia tri <code>&lt;= 0xFF</code>.</li>
+      <li>Kiem tra khong vuot <code>APP_MAX_PAYLOAD_LEN</code>.</li>
+      <li>Goi <code>vlc_tx_set_payload(payload, len)</code>.</li>
+      <li>Tra ve:</li>
+    </ol>
+    <pre>cmd_ok tx_payload len=8 checksum=04</pre>
+
+    <h3>7.2 <code>tx_start</code></h3>
+    <p>Bat che do phat lien tuc:</p>
+    <pre>cmd_ok tx_start</pre>
+
+    <h3>7.3 <code>tx_stop</code></h3>
+    <p>Dung phat du lieu, carrier bi keo xuong <code>0</code>:</p>
+    <pre>cmd_ok tx_stop</pre>
+
+    <h3>7.4 <code>tx_carrier_on</code></h3>
+    <p>Giu carrier ON lien tuc de do kiem:</p>
+    <pre>cmd_ok tx_carrier_on</pre>
+
+    <h3>7.5 <code>tx_carrier_off</code></h3>
+    <p>Tat carrier test mode:</p>
+    <pre>cmd_ok tx_carrier_off</pre>
+
+    <h3>7.6 <code>tx_single</code></h3>
+    <p>Phat dung mot frame roi dung:</p>
+    <pre>cmd_ok tx_single</pre>
+
+    <h3>7.7 <code>tx_status</code></h3>
+    <p>In snapshot TX hien tai:</p>
+    <pre>tx_status tx_enabled=&lt;0|1&gt; carrier_test=&lt;0|1&gt; tx_frames=&lt;N&gt; tx_frame_id=&lt;N&gt; bit_rate=100000 len=&lt;N&gt; payload=&lt;HEX...&gt; checksum=&lt;XX&gt; frame=&lt;HEX...&gt;</pre>
+
+    <h2>8. Cap nhat frame runtime an toan</h2>
+    <p>Khi doi payload bang UART, firmware khong ghi chong len du lieu TX dang duoc ISR doc truc tiep. Cach lam:</p>
+    <ol class="section-list">
+      <li>Build frame moi vao buffer tam.</li>
+      <li>Vao critical section ngan bang <code>__disable_irq()</code>.</li>
+      <li>Copy frame moi vao buffer TX.</li>
+      <li>Reset chi so bit ve dau frame.</li>
+      <li><code>__enable_irq()</code>.</li>
+    </ol>
+    <p>Muc tieu la giu ISR ngan va tranh frame bi doc do dang cap nhat.</p>
+
+    <h2>9. Log TX UART</h2>
+    <p>Cac dong log chinh cua TX:</p>
+    <pre>role board_role=TX_ONLY
+alive_tx tx_frames=&lt;N&gt; tx_frame_id=&lt;N&gt; bit_rate=100000 tx_enabled=&lt;0|1&gt; carrier_test=&lt;0|1&gt;
+tx_frame tx_frame_id=&lt;N&gt; len=&lt;N&gt; payload=&lt;HEX...&gt; checksum=&lt;XX&gt; frame=&lt;FULL_FRAME_HEX...&gt;
+adc_mv ...
+dac_mv threshold=1650
+rtc ...</pre>
+
+    <table>
+      <thead>
+        <tr><th>Log</th><th>Y nghia</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><code>role board_role=TX_ONLY</code></td><td>Board dang build o che do chi phat</td></tr>
+        <tr><td><code>alive_tx ...</code></td><td>Heartbeat dinh ky cua TX</td></tr>
+        <tr><td><code>tx_frame ...</code></td><td>Snapshot frame TX hien tai</td></tr>
+        <tr><td><code>adc_mv ...</code></td><td>Dien ap he thong da scale mV</td></tr>
+        <tr><td><code>dac_mv ...</code></td><td>Nguong DAC dang dung</td></tr>
+        <tr><td><code>rtc ...</code></td><td>Thoi gian RTC hien tai</td></tr>
+      </tbody>
+    </table>
+
+    <h2>10. Trang thai runtime cua TX</h2>
+    <table>
+      <thead>
+        <tr><th>Trang thai</th><th>Mo ta</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><code>tx_enabled = 1</code></td><td>Phat lien tuc frame</td></tr>
+        <tr><td><code>tx_enabled = 0</code></td><td>Khong phat du lieu, carrier OFF</td></tr>
+        <tr><td><code>carrier_test = 1</code></td><td>Giu carrier ON lien tuc</td></tr>
+        <tr><td><code>single_frame_mode = 1</code></td><td>Phat mot frame roi tu dung</td></tr>
+      </tbody>
+    </table>
+
+    <h2>11. Luong kiem thu</h2>
+    <p>Khi kiem thu TX_ONLY, nen quan sat:</p>
+    <ol class="section-list">
+      <li><code>tx_frames</code> tang deu theo thoi gian.</li>
+      <li><code>tx_frame</code> giu dung payload mac dinh hoac payload vua set.</li>
+      <li><code>cmd_ok tx_payload ...</code> phan hoi dung checksum.</li>
+      <li>Tren oscilloscope:
+        <ul>
+          <li>carrier 1 MHz van co tren <code>PA8</code></li>
+          <li>OOK bat/tat theo bit <code>1</code>/<code>0</code></li>
+        </ul>
+      </li>
+      <li>Khong co log loi tu ISR.</li>
+    </ol>
+
+    <h2>12. Ket luan</h2>
+    <div class="card">
+      <ul class="section-list">
+        <li>phan cung carrier va timer giu co dinh,</li>
+        <li>ISR chi lam viec toi thieu,</li>
+        <li>frame duoc build theo protocol thong nhat,</li>
+        <li>UART command xu ly o foreground,</li>
+        <li>runtime update frame dung critical section ngan,</li>
+        <li>logging duoc tach rieng khoi ISR.</li>
+      </ul>
+      <p>Dieu nay giup firmware giu duoc tinh on dinh realtime dong thoi van du linh hoat de GUI dieu khien TX va theo doi trang thai.</p>
+    </div>
+  </div>
+</body>
+</html>
